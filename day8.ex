@@ -54,8 +54,8 @@ defmodule Day8 do
     end
   end
 
-  def maxView(_, _, [], m), do: m
-  def maxView(f, l, [{h,w}|cs], m) do
+  def maxView([], _, _, m), do: m
+  def maxView([{h,w}|cs], f, l, m) do
     th = high(f, {h,w})
     [_|upwards] = for c <- h..0, do: {c,w}
     [_|downwards] = for c <- h..l, do: {c,w}
@@ -66,13 +66,14 @@ defmodule Day8 do
     lp = score(f, leftwards, th)
     rp = score(f, rightwards, th)
     s = up * dp * lp * rp
-    maxView(f, l, cs, max(m,s))
+    maxView(cs, f, l, max(m,s))
   end
 
   def bestView(f) do
     l = Enum.count(f)
-    coords = List.flatten(for x <- Enum.to_list(0..l-1), do: for y <- Enum.to_list(0..l-1), do: {x,y})
-    maxView(f, l-1, coords, 0)
+    (for x <- Enum.to_list(0..l-1), do: for y <- Enum.to_list(0..l-1), do: {x,y})
+    |> List.flatten
+    |> maxView(f, l-1, 0)
   end
 
   def main do
@@ -80,3 +81,6 @@ defmodule Day8 do
     IO.inspect(bestView(input()))
   end
 end
+
+# 1543
+# 595080

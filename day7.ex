@@ -30,3 +30,6 @@ defmodule Day7 do
     IO.inspect(Enum.min(for rr <- rs, rr >= needed, do: rr))
   end
 end
+
+# 1844187
+# 4978279

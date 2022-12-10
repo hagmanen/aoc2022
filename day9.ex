@@ -51,6 +51,7 @@ defmodule Day9 do
     IO.inspect(solve(input(), List.duplicate({0,0}, 2), MapSet.new()))
     IO.inspect(solve(input(), List.duplicate({0,0}, 10), MapSet.new()))
   end
-  # p1: 6337
-  # p2: 2455
 end
+
+# 6337
+# 2455

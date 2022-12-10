@@ -1,7 +1,8 @@
 defmodule Day10 do
   def input do
-    program = String.split(File.read!("input10.txt"), "\n")
-    for instruction <- program, do: parseInstruction(instruction)
+    File.read!("input10.txt")
+    |> String.split("\n")
+    |> Enum.map(&parseInstruction/1)
   end
 
   def parseInstruction(instruction) do
@@ -45,6 +46,7 @@ defmodule Day10 do
     IO.inspect(Enum.join(for p <- 201..240, do: draw(res, p)))
   end
 end
+
 #17180
 ###..####.#..#.###..###..#....#..#.###.."
 #..#.#....#..#.#..#.#..#.#....#..#.#..#."

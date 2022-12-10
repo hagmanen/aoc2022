@@ -1,6 +1,7 @@
 defmodule Day3 do
   def input do
-    for line <- String.split(File.read!("input3.txt"), "\n"), do: mkpair(line)
+    File.read!("input3.txt")
+    |> String.split("\n")
   end
   def mkpair(s) do
     len = String.length(s)
@@ -9,14 +10,13 @@ defmodule Day3 do
   end
   def score({[], _}), do: 0
   def score({[x|xs], y}) do
-#    IO.inspect(x)
     if (y =~ to_string([x])) do scoreC(x)
     else score({xs, y})
     end
   end
   def scoreC(c) do
-    if (c >= 97 && c <= 122) do c - 96
-    else c - 38 
+    if (c >= ?a && c <= ?z) do c + 1 - ?a
+    else c + 27 - ?A
     end
   end
 
@@ -25,9 +25,11 @@ defmodule Day3 do
   end
 
   def groupScore([a, b, c]) do
-    i1 = MapSet.intersection(MapSet.new(a), MapSet.new(b))
-    i2 = MapSet.intersection(i1, MapSet.new(c))
-    scoreC(List.first(MapSet.to_list(i2)))
+    MapSet.intersection(MapSet.new(a), MapSet.new(b))
+    |> MapSet.intersection(MapSet.new(c))
+    |> MapSet.to_list
+    |> List.first
+    |> scoreC
   end
   def solve2([]), do: 0
   def solve2(l) do
@@ -38,7 +40,10 @@ defmodule Day3 do
   end
 
   def main do
-    IO.inspect(solve(input()))
-    IO.inspect(solve2(for line <- String.split(File.read!("input3.txt"), "\n"), do: to_charlist(line)))
+    IO.inspect(solve(Enum.map(input(), &mkpair/1)))
+    IO.inspect(solve2(Enum.map(input(), &to_charlist/1)))
   end
 end
+
+# 7553
+# 2758

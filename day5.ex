@@ -88,3 +88,6 @@ defmodule Day5 do
     IO.inspect(move2(piles, moves))
   end
 end
+
+# SBPQRSCDF
+# RGLVRCQSB

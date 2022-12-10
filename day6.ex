@@ -4,8 +4,9 @@ defmodule Day6 do
   end
 
   def isUnique(cs, n, s) do
-    list = Enum.slice(cs, n..n+s-1)
-    Enum.count(Enum.uniq(list)) == s
+    s == Enum.slice(cs, n..n+s-1)
+    |> Enum.uniq
+    |> Enum.count
   end
 
   def solve(cs, n, s) do
@@ -19,3 +20,6 @@ defmodule Day6 do
     IO.inspect(solve(input(), 0, 14))
   end
 end
+
+# 1965
+# 2773

@@ -1,13 +1,19 @@
 defmodule Day4 do
   def input do
-    for line <- String.split(File.read!("input4.txt"), "\n"), do: parseLine(line)
+    File.read!("input4.txt")
+    |> String.split("\n")
+    |> Enum.map(&parseLine/1)
   end
   def parseLine(line) do
-    r = for range <- String.split(line, ","), do: parseRange(range)
+    r = line
+    |> String.split(",")
+    |> Enum.map(&parseRange/1)
     {Enum.at(r, 0), Enum.at(r, 1)}
   end
   def parseRange(range) do
-    ns = for n <- String.split(range, "-"), do: String.to_integer(n)
+    ns = range
+    |> String.split("-")
+    |> Enum.map(&String.to_integer/1)
     {Enum.at(ns, 0), Enum.at(ns, 1)}
   end
 
@@ -35,3 +41,6 @@ defmodule Day4 do
     IO.inspect(solve(input(), &overlap/1))
   end
 end
+
+# 534
+# 841

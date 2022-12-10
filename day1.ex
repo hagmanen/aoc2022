@@ -1,7 +1,7 @@
 defmodule Day1 do
   def input do
-    file = File.read!("input1.txt")
-    groups = String.split(file, "\n\n")
+    groups = File.read!("input1.txt")
+    |> String.split("\n\n")
     for elf <- groups, do: parseElf(elf)
   end
 
@@ -11,10 +11,11 @@ defmodule Day1 do
 
   def solve1(elfs), do: Enum.max(for sum <- elfs, do: Enum.sum(sum))
   def solve2(elfs) do
-    sumlist = for sum <- elfs, do: Enum.sum(sum)
-    toplist = Enum.sort(sumlist, fn a, b -> a > b end)
-    top3 = Enum.take(toplist, 3)
-    Enum.sum(top3)
+    elfs
+    |> Enum.map(&Enum.sum/1)
+    |> Enum.sort(fn a, b -> a > b end)
+    |> Enum.take(3)
+    |> Enum.sum
   end
 
   def main do
@@ -22,3 +23,6 @@ defmodule Day1 do
     IO.inspect(solve2(input()))
   end
 end
+
+# 69206
+# 197400

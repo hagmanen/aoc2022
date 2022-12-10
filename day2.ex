@@ -1,6 +1,8 @@
 defmodule Day2 do
   def input do
-    for line <- String.split(File.read!("input2.txt"), "\n"), do: String.split(line, " ")
+    File.read!("input2.txt")
+    |> String.split("\n")
+    |> Enum.map(fn s -> String.split(s, " ") end)
   end
 
   def bonus("X"), do: 1
@@ -39,3 +41,6 @@ defmodule Day2 do
     IO.inspect(solve(mut(input())))
   end
 end
+
+# 14375
+# 10274
