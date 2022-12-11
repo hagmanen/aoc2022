@@ -17,11 +17,19 @@ defmodule Day11 do
     [_, _, items, _, operation, _, test, _, true_monkey, _, false_monkey] = monkey
     |> String.split(["\n", ":"], trim: true)
     { parseItems(items),
-      fn level -> elem(Code.eval_string(operation, [old: level]), 0) end,
+      parseOperation(operation),
       wordToInt(test, 3),
       wordToInt(true_monkey, 4),
       wordToInt(false_monkey, 4),
       0}
+  end
+  def parseOperation(operation) do
+    [_, _, _, o, r] = String.split(operation, " ", trim: true)
+    cond do
+      r == "old" -> fn x -> x * x end
+      o == "*" -> fn x -> x * String.to_integer(r) end
+      true -> fn x -> x + String.to_integer(r) end
+    end
   end
   def parseItems(items) do
     String.split(items, [" ", ","], trim: true)
@@ -31,9 +39,6 @@ defmodule Day11 do
     String.split(text, " ")
     |> Enum.at(word)
     |> String.to_integer
-  end
-  def applyOperation(level, operation) do
-    elem(Code.eval_string(operation, [old: level]), 0)
   end
 
   def levelAction(monkey, level, config) do
@@ -58,15 +63,7 @@ defmodule Day11 do
       end)
   end
   def addLevel({levels, operation, test, true_monkey, false_monkey, count}, level) do
-    {levels ++ [level], operation, test, true_monkey, false_monkey, count}
-  end
-  def addLevel(monkey, level) do
-    monkey
-    |> Enum.with_index
-    |> Enum.map(fn
-      {levels, 0} -> levels ++ [level]
-      {f, _} -> f
-      end)
+    {[level|levels], operation, test, true_monkey, false_monkey, count}
   end
 
   def indexList(e) do
