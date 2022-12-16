@@ -18,9 +18,9 @@ defmodule Day15 do
   def dist({x1,y1}, {x2,y2}), do: abs(x1-x2) + abs(y1-y2)
   def deltaX({x,y}, d, y0) do
     dy = abs(y-y0)
-    cond do
-      dy > d -> {}
-      true -> {x-d+dy,x+d-dy}
+    case dy > d do
+      true -> {}
+      false -> {x-d+dy,x+d-dy}
     end
   end
 
@@ -47,10 +47,9 @@ defmodule Day15 do
   def addRange(rs,{}), do: rs
   def addRange([], ar), do: [ar]
   def addRange([r|rs], ar) do
-    if (overlap(r,ar)) do
-      addRange(rs, merge(r,ar))
-    else
-      [r|addRange(rs, ar)]
+    case overlap(r,ar) do
+      true -> addRange(rs, merge(r,ar))
+      false -> [r|addRange(rs, ar)]
     end
   end
 
@@ -58,19 +57,17 @@ defmodule Day15 do
   def solve1([s|ss], y0, ib), do: addRange(solve1(ss, y0, ib), noneBeacon(s, y0, ib))
 
   def findX([{_, x2}, {x3, x4}]) do
-    if (x2 < x3) do
-      x2 + 1
-    else
-      x4 + 1
+    case x2 < x3 do
+      true -> x2 + 1
+      false -> x4 + 1
     end
   end
 
   def solve2(sensors, [y|ys], max) do
     rs = solve1(sensors, y, true)
-    if (Enum.count(rs) == 1) do
-      solve2(sensors, ys, max)
-    else
-      (findX(rs)*4000000)+y
+    case Enum.count(rs) do
+      1 -> solve2(sensors, ys, max)
+      2 -> (findX(rs)*4000000)+y
     end
   end
 
