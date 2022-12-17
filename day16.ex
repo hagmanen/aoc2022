@@ -12,34 +12,43 @@ defmodule Day16 do
     |> parseLine()
   end
 
-  def do_move(_, _, _, 0, released, _), do: released
+  def do_move(_, _, _, 0, released, trail), do: {released, trail}
   def do_move(pos, map, open, left, released, trail) do
     Map.fetch!(map, pos)
     |> elem(1)
-    |> Enum.map(fn p -> solve(p, map, open, left-1, released, trail) end)
-    |> Enum.max
+    |> Enum.reduce({0,trail}, fn p, {r, a} -> do_solve(p, map, open, left-1, released, a, r) end)
   end
-
-  def better(trail, pos, current) do
-    case Map.fetch(trail, pos) do
-      :error -> false
-      {_, rel} -> current > rel
+  def do_solve(pos, map, open, left, released, trail, best) do
+    #IO.inspect({pos, left, released, trail, best})
+    {r,t} = solve(pos, map, open, left, released, trail)
+    case r > best do
+      true -> {r,t}
+      false -> {best, trail}
     end
   end
 
-  def do_move_if_needed(pos, map, open, left, released, trail) do
-    case {better(trail, pos, released) ,Enum.count(map) == Enum.count(open)} do
-      {_, true} -> released
-      _ -> do_move(pos, map, open, left, released, Map.put(trail, pos, released))
-    end
-  end
+#  def better(trail, pos, current) do
+#    case Map.fetch(trail, pos) do
+#      :error -> false
+#      {_, rel} -> current > rel
+#    end
+#  end
 
   def release(pos, map, left) do
     rate(pos, map) * left
   end
 
   def do_open(pos, map, open, left, released, trail) do
-    do_move_if_needed(pos, map, MapSet.put(open, pos), left - 1, (released + release(pos, map, left)), trail)
+    do_move(pos, map, MapSet.put(open, pos), left - 1, (released + release(pos, map, left)), trail)
+  end
+
+  def do_open_and_move(pos, map, open, left, released, trail) do
+    {r1, t1} = do_open(pos, map, open, left, released, trail)
+    {r2, t2} = do_move(pos, map, open, left, released, t1)
+    case r1 > r2 do
+      true -> {r1, t1}
+      false -> {r2, t2}
+    end
   end
 
   def rate(pos, map) do
@@ -47,12 +56,20 @@ defmodule Day16 do
     |> elem(0)
   end
 
-  def solve(_, _, _, 0, released, _), do: released
+  def have_seen_better(pos, released, trail) do
+    case Map.fetch(trail, pos) do
+      :error -> false
+      {:ok, r} -> r > released
+    end
+  end
+
+  def solve(_, _, _, 0, released, trail), do: {released, trail}
   def solve(pos, map, open, left, released, trail) do
-    #no_open = do_move_if_needed(pos, map, open, left, released, trail)
-    case MapSet.member?(open, pos) do
-      true -> do_move_if_needed(pos, map, open, left, released, trail)
-      false -> do_open(pos, map, open, left, released, trail) #max(do_open(pos, map, open, left, released, trail), no_open)
+    t = Map.put(trail, pos, released)
+    case {MapSet.member?(open, pos), have_seen_better(pos, released, trail)} do
+      {_, true} -> {0, t}
+      {true, _} -> do_move(pos, map, open, left, released, t)
+      _ -> do_open_and_move(pos, map, open, left, released, t)
     end
   end
 
