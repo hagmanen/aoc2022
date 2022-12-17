@@ -16,14 +16,21 @@ defmodule Day16 do
   def do_move(pos, map, open, left, released, trail) do
     Map.fetch!(map, pos)
     |> elem(1)
-    |> Enum.map(fn p -> solve(p, map, open, left-1, released, [pos|trail]) end)
+    |> Enum.map(fn p -> solve(p, map, open, left-1, released, trail) end)
     |> Enum.max
   end
 
+  def better(trail, pos, current) do
+    case Map.fetch(trail, pos) do
+      :error -> false
+      {_, rel} -> current > rel
+    end
+  end
+
   def do_move_if_needed(pos, map, open, left, released, trail) do
-    case Enum.count(map) == Enum.count(open) do
-      true -> released
-      false -> do_move(pos, map, open, left, released, trail)
+    case {better(trail, pos, released) ,Enum.count(map) == Enum.count(open)} do
+      {_, true} -> released
+      _ -> do_move(pos, map, open, left, released, Map.put(trail, pos, released))
     end
   end
 
@@ -40,25 +47,12 @@ defmodule Day16 do
     |> elem(0)
   end
 
-  def repeated(_, 0), do: false
-  def repeated(trail, i) do
-    #IO.inspect({i, Enum.slice(trail, 0..i),Enum.slice(trail, i+1..(2*i)+1)})
-    Enum.slice(trail, 0..i) == Enum.slice(trail, i+1..(2*i)+1)
-  end
-
-  def loopy([_]), do: false
-  def loopy(trail), do: loopy(trail, Enum.to_list(0..div(Enum.count(trail),2)-1))
-  def loopy(_, []), do: false
-  def loopy(trail, [i|is]) do
-    repeated(trail, i) || loopy(trail, is)
-  end
-
   def solve(_, _, _, 0, released, _), do: released
   def solve(pos, map, open, left, released, trail) do
-    case {loopy(trail), MapSet.member?(open, pos)} do
-      {true,_} -> released
-      {_,true} -> do_move(pos, map, open, left, released, trail)
-      {_,false} -> max(do_open(pos, map, open, left, released, trail), do_move(pos, map, open, left, released, trail))
+    #no_open = do_move_if_needed(pos, map, open, left, released, trail)
+    case MapSet.member?(open, pos) do
+      true -> do_move_if_needed(pos, map, open, left, released, trail)
+      false -> do_open(pos, map, open, left, released, trail) #max(do_open(pos, map, open, left, released, trail), no_open)
     end
   end
 
@@ -71,9 +65,10 @@ defmodule Day16 do
 
   def main do
     map = input()
-    IO.inspect(solve("AA", map, openBroken(map), 30, 0, ["AA"]))
+    IO.inspect(solve("AA", map, openBroken(map), 30, 0, Map.new()))
   end
 end
 
+# sample 1651
 # 
 # 
