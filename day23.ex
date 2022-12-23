@@ -15,7 +15,11 @@ defmodule Day23 do
 
   def solve(elfs, _, 0), do: score(elfs)
   def solve(elfs, [dir|dirs], c) do
-    solve(doRound(elfs, [dir|dirs]), dirs ++ [dir], c - 1)
+    news = doRound(elfs, [dir|dirs])
+    case news == elfs do
+      true -> -c
+      false -> solve(news, dirs ++ [dir], c - 1)
+    end
   end
   def minmax({r,c}, {minR, maxR, minC, maxC}) do
     {min(minR, r), max(maxR, r), min(minC, c), max(maxC, c)}
@@ -80,9 +84,10 @@ defmodule Day23 do
   def newPos({_, failed}, elfs), do: MapSet.union(MapSet.new(failed), elfs)
 
   def main do
-    solve(input(), [:north, :south, :west, :east], 10)
+    IO.inspect(solve(input(), [:north, :south, :west, :east], 10))
+    IO.inspect(solve(input(), [:north, :south, :west, :east], -1))
   end
 end
 
-# 
-# 
+# 3864
+# 946
