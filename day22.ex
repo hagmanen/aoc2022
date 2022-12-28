@@ -5,28 +5,23 @@ defmodule Day22 do
     {parseMaze(maze), parsePath(path)}
   end
 
+  def parseMaze(text) do
+    text
+    |> String.split("\n")
+    |> Enum.with_index
+    |> Enum.reduce(Map.new, fn x, a -> parseRow(x, a) end)
+  end
+  def parseRow({text, row}, maze) do
+    text
+    |> to_charlist
+    |> Enum.with_index
+    |> Enum.reduce(maze, fn x, a -> parseCoord(x, row, a) end)
+  end
   def choose(true, a, _), do: a
   def choose(_, _, a), do: a
-  def maxLength(text) do
-    text
-    |> String.split("\n")
-    |> Enum.reduce(0, fn l, m -> choose(String.length(l) > m, String.length(l), m) end)
-  end
-  def parseMaze(text) do
-    max = maxLength(text)
-    text
-    |> String.split("\n")
-    |> Enum.map(fn x -> toSpace(x, max) end)
-  end
-  def toSpace(?\s), do: :void
-  def toSpace(?.), do: :open
-  def toSpace(?#), do: :wall
-  def toSpace(text, max) do
-    text
-    |> String.pad_trailing(max, " ")
-    |> to_charlist
-    |> Enum.map(&toSpace/1)
-  end
+  def parseCoord({?\s,_}, _, maze), do: maze
+  def parseCoord({?.,col}, row, maze), do: Map.put(maze, {row, col}, :open)
+  def parseCoord({?#,col}, row, maze), do: Map.put(maze, {row, col}, :wall)
   def parsePath(text) do
     weave(parseNumbers(text), parseRotations(text))
   end
@@ -48,51 +43,83 @@ defmodule Day22 do
   def score(:down), do: 1
   def score(:left), do: 2
   def score(:up), do: 3
-  def score({{r, c}, d}), do: ((r+1) * 1000) + ((c+1)*4) + score(d)
-  def solve1({m, i}), do: solve(i, {{0, firstOpen(Enum.at(m,0), 0)}, :right}, m, {Enum.count(m), Enum.count(Enum.at(m,0))})
-  def solve([], p, _, _), do: score(p)
-  def solve([i|is], {{r,c}, d}, maze, max) do
-#    IO.inspect({i, {{r,c}, d}})
+  def score({r, c}, d), do: ((r+1) * 1000) + ((c+1)*4) + score(d)
+
+  def solve1({maze, path}, wrapper), do: solve(path, {firstOpen(0, maze), :right}, maze, wrapper)
+  def solve([], {pos, dir}, _, _), do: score(pos, dir)
+  def solve([i|is], {c, d}, maze, wrapper) do
     cond do
-      i == :right || i == :left -> solve(is, {{r,c}, rotate(d, i)}, maze, max)
-      i == 0 -> solve(is, {{r,c}, d}, maze, max)
-      true -> solve([i-1|is], {step({r,c}, d, maze, max), d}, maze, max)
+      i == :right || i == :left -> solve(is, {c, rotate(d, i)}, maze, wrapper)
+      i == 0 -> solve(is, {c, d}, maze, wrapper)
+      true -> solve([i-1|is], step({c, d}, maze, wrapper), maze, wrapper)
     end
   end
 
-  def firstOpen([:open|_], i), do: i
-  def firstOpen([_|ss], i), do: firstOpen(ss, i+1)
-  def space(m, r, c), do: Enum.at(Enum.at(m,r),c)
-  def isVoid(m, r, c), do: Enum.at(Enum.at(m,r),c) == :void
-  def isWall(m, r, c), do: Enum.at(Enum.at(m,r),c) == :wall
-  def step({r,c}, d, maze, max) do
-#    IO.inspect({{r,c}, d})
-    {nr, nc, w} = doStep(d, {r,c}, maze, max)
-    choose(w == :wall, {r,c}, {nr, nc})
-  end
-  def doStep(d, {r,c}, maze, max) do
-#    IO.inspect({d, {r,c}})
-    {nr, nc} = doStep1(d, {r,c}, max)
-    ns = space(maze, nr, nc)
-#    IO.inspect({d, {r,c}, ns, {nr, nc}})
-    case ns == :void do
-      true -> doStep(d, {nr,nc}, maze, max)
-      false -> {nr, nc, ns}
+  def firstOpen(col, maze) do
+    case Map.get(maze, {0,col}, :void) == :open do
+      true -> {0,col}
+      false -> firstOpen(col+1, maze)
     end
   end
-  def doStep1(:right, {r,c}, max), do: rotate({r, c+1}, max)
-  def doStep1(:left, {r,c}, max), do: rotate({r, c-1}, max)
-  def doStep1(:down, {r,c}, max), do: rotate({r+1, c}, max)
-  def doStep1(:up, {r,c}, max), do: rotate({r-1, c}, max)
-  def rotate({r,c}, {mr, mc}) do
+  def space(maze, cor), do: Map.get(maze, cor, :void)
+  def step(:right, {r,c}), do: {{r, c+1}, :right}
+  def step(:left, {r,c}), do: {{r, c-1}, :left}
+  def step(:down, {r,c}), do: {{r+1, c}, :down}
+  def step(:up, {r,c}), do: {{r-1, c}, :up}
+  def step(pos, maze, wrapper) do
+    {c, d} = doStep1(pos, maze, wrapper)
+    case space(maze, c) do
+      :wall -> pos
+      _ -> {c, d}
+    end
+  end
+  def doStep1({cor, dir}, maze, wrapper) do
+    {c, d} = step(dir, cor)
+    case Map.has_key?(maze, c) do
+      true -> {c, d}
+      false -> wrapper.(cor, dir, maze)
+    end
+  end
+
+  def secret({_, col}, :up) do
     cond do
-      r == -1 -> {mr+r,c}
-      r == mr -> {0,c}
-      c == -1 -> {r,mc+c}
-      c == mc -> {r,0}
-      true -> {r,c}
+      col < 50 -> {{50 + col, 50}, :right}
+      col < 100 -> {{100 + col, 0}, :right}
+      true -> {{199, col - 100}, :up}
     end
   end
+  def secret({row, _}, :right) do
+    cond do
+      row < 50 -> {{149 - row, 99}, :left}
+      row < 100 -> {{49, 50 + row}, :up}
+      row < 150 -> {{149 - row, 149}, :left}
+      true -> {{149, row - 100}, :up}
+    end
+  end
+  def secret({_, col}, :down) do
+    cond do
+      col < 50 -> {{0, col + 100}, :down}
+      col < 100 -> {{100 + col, 49}, :left}
+      true -> {{col - 50, 99}, :left}
+    end
+  end
+  def secret({row, _}, :left) do
+    cond do
+      row < 50 -> {{149 - row, 0}, :right}
+      row < 100 -> {{100, row - 50}, :down}
+      row < 150 -> {{149 - row, 50}, :right}
+      true -> {{0, row - 100}, :down}
+    end
+  end
+
+  def goToLast(dir, cor, maze) do
+    {c, d} = step(dir, cor)
+    case Map.has_key?(maze, c) do
+      true -> goToLast(d, c, maze)
+      false -> cor
+    end
+  end
+
   def rotate(:right, :right), do: :down
   def rotate(:down, :right), do: :left
   def rotate(:left, :right), do: :up
@@ -101,10 +128,19 @@ defmodule Day22 do
   def rotate(:down, :left), do: :right
   def rotate(:left, :left), do: :down
   def rotate(:up, :left), do: :left
+  def turnAround(:right), do: :left
+  def turnAround(:left), do: :right
+  def turnAround(:down), do: :up
+  def turnAround(:up), do: :down
+  
+  def part1(cor, dir, maze), do: {goToLast(turnAround(dir), cor, maze), dir}
+  def part2(cor, dir, _), do: secret(cor, dir)
+
   def main do
-    solve1(input())
+    IO.inspect(solve1(input(), &part1/3))
+    IO.inspect(solve1(input(), &part2/3))
   end
 end
 
 # 165094
-# 
+# 95316
